@@ -29,7 +29,8 @@ class HmSystem {
             iv->config     = &INVERTERTYPE::GeneralConfig->iv[id];
             DPRINT(DBG_VERBOSE, "SERIAL: " + String(iv->config->serial.b[5], HEX));
             DPRINTLN(DBG_VERBOSE, " " + String(iv->config->serial.b[4], HEX));
-            if((iv->config->serial.b[5] == 0x11) || (iv->config->serial.b[5] == 0x10)) {
+            // Ajout de 0x14 pour supporter le HMS-1000 avec serial 1410XXXXXXXX
+            if((iv->config->serial.b[5] == 0x11) || (iv->config->serial.b[5] == 0x10) || (iv->config->serial.b[5] == 0x14)) {
                 switch(iv->config->serial.b[4]) {
                     case 0x24: // HMS-500
                     case 0x22:
@@ -40,7 +41,9 @@ class HmSystem {
 
                     case 0x44: // HMS-1000
                     case 0x42:
-                    case 0x41: iv->type = INV_TYPE_2CH;
+                    case 0x41:
+                    case 0x10: // Ajout pour HMS-1000 avec b[4] == 0x10
+                        iv->type = INV_TYPE_2CH;
                         break;
 
                     case 0x64: // HMS-2000
@@ -61,6 +64,10 @@ class HmSystem {
                         iv->ivGen = IV_HM;
                         iv->ivRadioType = INV_RADIO_TYPE_NRF;
                     }
+                } else if((iv->config->serial.b[5] == 0x14) && (iv->config->serial.b[4] == 0x10)) {
+                    // Special case dor HMS-1000-2T
+                    iv->ivGen = IV_HMS;
+                    iv->ivRadioType = INV_RADIO_TYPE_CMT;
                 } else if((iv->config->serial.b[4] & 0x03) == 0x02) { // MI 3rd Gen -> same as HM
                     iv->ivGen = IV_HM;
                     iv->ivRadioType = INV_RADIO_TYPE_NRF;
